@@ -1,8 +1,13 @@
+const http = require('http');
+const https = require('https');
+const { parse } = require('url');
+const { escapeHTML } = require('escape-goat');
+
 const TARGET_BASE = 'https://downloads.immortalwrt.org';
 const ALLOWED_REGIONS = ['CN', 'HK', 'MO', 'TW'];
 
-// 主处理函数
-module.exports = async (req, res) => {
+// 创建 HTTP 服务器
+const server = http.createServer(async (req, res) => {
   try {
     // 获取客户端信息
     const country = req.headers['x-vercel-ip-country'] || '未知';
@@ -30,7 +35,11 @@ module.exports = async (req, res) => {
     
     // 设置超时
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => {
+      controller.abort();
+      sendErrorResponse(req, res, new Error('请求超时'), clientIp);
+    }, 15000);
+    
     proxyOptions.signal = controller.signal;
     
     // 发送代理请求
@@ -43,33 +52,28 @@ module.exports = async (req, res) => {
       if (location) {
         const redirectUrl = new URL(location, TARGET_BASE);
         res.setHeader('Location', redirectUrl.toString());
-        return res.status(proxyRes.status).end();
+        res.writeHead(proxyRes.status);
+        return res.end();
       }
     }
     
     // 设置响应头
-    const headers = Object.fromEntries(proxyRes.headers.entries());
-    delete headers['content-security-policy'];
-    delete headers['x-frame-options'];
-    headers['access-control-allow-origin'] = '*';
+    res.writeHead(proxyRes.status, {
+      ...Object.fromEntries(proxyRes.headers.entries()),
+      'Content-Security-Policy': "default-src 'self'",
+      'X-Proxy-Service': 'ImmortalWrt Mirror',
+      'Cache-Control': 'public, max-age=3600'
+    });
     
     // 流式传输响应
-    res.writeHead(proxyRes.status, headers);
-    const reader = proxyRes.body.getReader();
-    
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      res.write(value);
-    }
-    
-    res.end();
+    proxyRes.body.pipe(res);
     
   } catch (error) {
     console.error('Proxy error:', error.message);
-    return sendErrorResponse(req, res, error);
+    const clientIp = req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    return sendErrorResponse(req, res, error, clientIp);
   }
-};
+});
 
 // 发送拦截响应
 function sendBlockedResponse(req, res, country, clientIp) {
@@ -197,7 +201,7 @@ function sendBlockedResponse(req, res, country, clientIp) {
       <p>${template.footer}</p>
       <p style="margin-top: 10px; font-size: 0.9em; color: #999;">
         ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })} | 
-        IP: ${clientIp || '未知'}
+        IP: ${escapeHTML(clientIp || '未知')}
       </p>
     </div>
   </div>
@@ -205,15 +209,16 @@ function sendBlockedResponse(req, res, country, clientIp) {
 </html>
   `;
   
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
-  res.status(403).send(html);
+  res.writeHead(403, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'no-store, max-age=0',
+    'X-Proxy-Service': 'ImmortalWrt Mirror'
+  });
+  res.end(html);
 }
 
 // 发送错误响应
-function sendErrorResponse(req, res, error) {
-  const clientIp = req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  
+function sendErrorResponse(req, res, error, clientIp) {
   const html = `
 <!DOCTYPE html>
 <html>
@@ -299,7 +304,6 @@ function sendErrorResponse(req, res, error) {
       <ul style="padding-left: 25px; margin-top: 10px;">
         <li style="margin-bottom: 10px;">稍后重试 - 可能是临时网络问题</li>
         <li style="margin-bottom: 10px;">检查URL - 确保请求地址正确</li>
-        <li>联系支持 qc3284@xcqcoo.top 提供上方错误信息</li>
       </ul>
     </div>
     
@@ -314,10 +318,19 @@ function sendErrorResponse(req, res, error) {
 </html>
   `;
   
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store');
-  res.status(504).send(html);
+  res.writeHead(504, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'no-store',
+    'X-Proxy-Service': 'ImmortalWrt Mirror'
+  });
+  res.end(html);
 }
+
+// 启动服务器
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Proxy server running on port ${PORT}`);
+});
 
 // HTML转义函数
 function escapeHTML(str) {

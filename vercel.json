@@ -1,20 +1,16 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "proxy.js",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",
       "dest": "/proxy.js",
       "methods": ["GET", "HEAD", "POST"]
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Cache-Control", "value": "no-store, max-age=0" },
-        { "key": "X-Proxy-Service", "value": "ImmortalWrt Mirror" }
-      ]
     }
   ],
   "regions": ["hkg1"]
