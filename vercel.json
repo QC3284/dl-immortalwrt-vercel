@@ -1,16 +1,31 @@
 {
   "version": 2,
-  "builds": [
+  "routes": [
     {
-      "src": "proxy.js",
-      "use": "@vercel/node"
+      "src": "/proxy/(.*)",
+      "dest": "https://downloads.immortalwrt.org/$1",
+      "headers": {
+        "X-Proxy-Service": "ImmortalWrt Mirror"
+      }
+    },
+    {
+      "src": "/blocked",
+      "dest": "/api/blocked.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/proxy.js",
+      "methods": ["GET", "HEAD"]
     }
   ],
-  "rewrites": [
+  "regions": ["hkg1"],
+  "headers": [
     {
-      "source": "/:path*",
-      "destination": "/proxy.js"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
     }
-  ],
-  "regions": ["hkg1"]
+  ]
 }
