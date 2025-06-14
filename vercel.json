@@ -6,11 +6,10 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/proxy.js",
-      "methods": ["GET", "HEAD", "POST"]
+      "source": "/:path*",
+      "destination": "/proxy.js"
     }
   ],
   "regions": ["hkg1"]

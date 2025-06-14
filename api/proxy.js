@@ -1,7 +1,6 @@
 const http = require('http');
 const https = require('https');
 const { parse } = require('url');
-const { escapeHTML } = require('escape-goat');
 
 const TARGET_BASE = 'https://downloads.immortalwrt.org';
 const ALLOWED_REGIONS = ['CN', 'HK', 'MO', 'TW'];
@@ -33,18 +32,8 @@ const server = http.createServer(async (req, res) => {
     delete proxyOptions.headers.origin;
     delete proxyOptions.headers.referer;
     
-    // 设置超时
-    const controller = new AbortController();
-    const timeout = setTimeout(() => {
-      controller.abort();
-      sendErrorResponse(req, res, new Error('请求超时'), clientIp);
-    }, 15000);
-    
-    proxyOptions.signal = controller.signal;
-    
     // 发送代理请求
     const proxyRes = await fetch(targetUrl.toString(), proxyOptions);
-    clearTimeout(timeout);
     
     // 处理重定向
     if ([301, 302, 303, 307, 308].includes(proxyRes.status)) {
@@ -81,7 +70,7 @@ function sendBlockedResponse(req, res, country, clientIp) {
     { 
       title: "区域访问限制",
       content: "尊敬的访客，根据服务政策限制，您所在的地区（代码: ${code}）不在服务范围内。",
-      footer: "如有特殊访问需求，请联系 qc3284@xcqcoo.top",
+      footer: "666",
       color: "#2c3e50"
     },
     { 
@@ -89,18 +78,6 @@ function sendBlockedResponse(req, res, country, clientIp) {
       content: "🌏 我们检测到您正从 ${code} 地区访问，当前服务仅面向中国大陆及港澳台用户开放。",
       footer: "感谢您的理解与支持",
       color: "#3498db"
-    },
-    { 
-      title: "403 - 区域限制",
-      content: "访问被拒绝 [Region: ${code}]",
-      footer: "Allowed: CN, HK, MO, TW",
-      color: "#1abc9c"
-    },
-    { 
-      title: "空间跳跃失败 ✨",
-      content: "我们的服务尚未抵达 ${code} 区域，目前仅在中国大陆及港澳台提供服务",
-      footer: "技术支持: qc3284@xcqcoo.top",
-      color: "#9b59b6"
     }
   ];
   
@@ -115,7 +92,7 @@ function sendBlockedResponse(req, res, country, clientIp) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>访问受限 - ${template.title}</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
       background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
@@ -136,22 +113,22 @@ function sendBlockedResponse(req, res, country, clientIp) {
     }
     .header {
       background: ${template.color};
-      padding: 30px 40px;
+      padding: 30px;
       color: white;
     }
     .header h1 {
-      font-size: 2.2rem;
+      font-size: 1.8rem;
       font-weight: 700;
       margin-bottom: 8px;
     }
     .content {
-      padding: 40px;
+      padding: 30px;
     }
     .message {
-      font-size: 1.3rem;
-      margin-bottom: 30px;
+      font-size: 1.1rem;
+      margin-bottom: 20px;
       background: #f9f9ff;
-      padding: 20px;
+      padding: 15px;
       border-left: 4px solid ${template.color};
       border-radius: 0 8px 8px 0;
     }
@@ -159,21 +136,16 @@ function sendBlockedResponse(req, res, country, clientIp) {
       display: inline-block;
       background: ${template.color}22;
       color: ${template.color};
-      padding: 2px 10px;
+      padding: 2px 8px;
       border-radius: 4px;
       font-weight: 700;
       font-family: monospace;
     }
     .footer {
-      padding: 20px 40px 30px;
+      padding: 20px 30px;
       text-align: center;
       color: #777;
       border-top: 1px solid #eee;
-    }
-    @media (max-width: 600px) {
-      .header, .content { padding: 25px; }
-      .header h1 { font-size: 1.8rem; }
-      .message { font-size: 1.1rem; }
     }
   </style>
 </head>
@@ -190,7 +162,7 @@ function sendBlockedResponse(req, res, country, clientIp) {
       </div>
       
       <h3>📌 常见问题</h3>
-      <ul style="padding-left: 25px; margin-top: 10px; margin-bottom: 25px;">
+      <ul style="padding-left: 20px; margin: 15px 0;">
         <li style="margin-bottom: 8px;">为什么会出现此页面？ - 您的访问IP不在服务区域范围内</li>
         <li style="margin-bottom: 8px;">支持哪些地区？ - 中国大陆、香港、澳门及台湾</li>
         <li>如何解除限制？ - 使用支持地区的网络环境访问</li>
@@ -226,7 +198,7 @@ function sendErrorResponse(req, res, error, clientIp) {
   <meta charset="UTF-8">
   <title>代理服务错误</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
       background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
@@ -247,42 +219,29 @@ function sendErrorResponse(req, res, error, clientIp) {
     }
     .header {
       background: #e74c3c;
-      padding: 30px 40px;
+      padding: 30px;
       color: white;
     }
     .header h1 {
-      font-size: 2.2rem;
+      font-size: 1.8rem;
       font-weight: 700;
       margin-bottom: 8px;
     }
     .content {
-      padding: 40px;
+      padding: 30px;
     }
     .info {
       background: #f9f9ff;
-      padding: 20px;
+      padding: 15px;
       border-left: 4px solid #e74c3c;
       border-radius: 0 8px 8px 0;
-      margin-bottom: 20px;
-    }
-    .code {
-      display: inline-block;
-      background: #e74c3c22;
-      color: #e74c3c;
-      padding: 2px 10px;
-      border-radius: 4px;
-      font-weight: 700;
-      font-family: monospace;
+      margin-bottom: 15px;
     }
     .footer {
-      padding: 20px 40px 30px;
+      padding: 20px 30px;
       text-align: center;
       color: #777;
       border-top: 1px solid #eee;
-    }
-    @media (max-width: 600px) {
-      .header, .content { padding: 25px; }
-      .header h1 { font-size: 1.8rem; }
     }
   </style>
 </head>
@@ -301,9 +260,9 @@ function sendErrorResponse(req, res, error, clientIp) {
       </div>
       
       <h3>📌 建议操作</h3>
-      <ul style="padding-left: 25px; margin-top: 10px;">
-        <li style="margin-bottom: 10px;">稍后重试 - 可能是临时网络问题</li>
-        <li style="margin-bottom: 10px;">检查URL - 确保请求地址正确</li>
+      <ul style="padding-left: 20px; margin: 15px 0;">
+        <li style="margin-bottom: 8px;">稍后重试 - 可能是临时网络问题</li>
+        <li style="margin-bottom: 8px;">检查URL - 确保请求地址正确</li>
       </ul>
     </div>
     
@@ -326,12 +285,6 @@ function sendErrorResponse(req, res, error, clientIp) {
   res.end(html);
 }
 
-// 启动服务器
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Proxy server running on port ${PORT}`);
-});
-
 // HTML转义函数
 function escapeHTML(str) {
   if (!str) return '';
@@ -344,3 +297,48 @@ function escapeHTML(str) {
       "'": '&#39;'
     }[tag] || tag));
 }
+
+// 简单的 fetch 实现
+function fetch(url, options) {
+  return new Promise((resolve, reject) => {
+    const parsedUrl = parse(url);
+    const isHttps = parsedUrl.protocol === 'https:';
+    
+    const reqOptions = {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port || (isHttps ? 443 : 80),
+      path: parsedUrl.path,
+      method: options.method || 'GET',
+      headers: options.headers,
+      rejectUnauthorized: false
+    };
+    
+    const protocol = isHttps ? https : http;
+    const req = protocol.request(reqOptions, (res) => {
+      resolve({
+        status: res.statusCode,
+        headers: res.headers,
+        body: res,
+        text: () => new Promise((res, rej) => {
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => res(data));
+        })
+      });
+    });
+    
+    req.on('error', reject);
+    
+    if (options.body) {
+      options.body.pipe(req);
+    } else {
+      req.end();
+    }
+  });
+}
+
+// 启动服务器
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Proxy server running on port ${PORT}`);
+});
