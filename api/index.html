@@ -9,7 +9,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       try {
         // 获取客户端信息
-        const res = await fetch('/api/proxy?action=info');
+        const res = await fetch('/api/check-region');
         const data = await res.json();
         
         // 显示客户端信息
@@ -20,12 +20,12 @@
         // 检查是否允许访问
         const allowedRegions = ['CN', 'HK', 'MO', 'TW'];
         if (allowedRegions.includes(data.country)) {
-          // 允许访问，重定向到实际内容
-          const redirectPath = window.location.pathname.replace('/blocked.html', '');
-          if (redirectPath) {
-            window.location.href = `/proxy${redirectPath}`;
-          } else {
-            window.location.href = '/proxy/';
+          // 允许访问，直接加载内容
+          const currentPath = window.location.pathname;
+          if (currentPath !== '/') {
+            // 设置允许访问头并刷新
+            sessionStorage.setItem('region-allowed', 'true');
+            window.location.reload();
           }
         }
       } catch (error) {
@@ -101,6 +101,7 @@
     }
     .faq ul {
       padding-left: 20px;
+      list-style-position: inside;
     }
     .faq li {
       margin-bottom: 8px;
@@ -125,6 +126,7 @@
       border-radius: 4px;
       text-decoration: none;
       font-weight: 500;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -151,11 +153,11 @@
         </ul>
       </div>
       
-      <a href="#" class="refresh-btn" onclick="location.reload()">刷新检测结果</a>
+      <div class="refresh-btn" onclick="location.reload()">刷新检测结果</div>
     </div>
     
     <div class="footer">
-      <p>如有特殊访问需求，请联系 support@example.com</p>
+      <p>如有特殊访问需求，请联系 qc3284@xcqcoo.top</p>
       <p>IP: <span id="client-ip">检测中...</span></p>
       <p>检测时间: <span id="timestamp">--</span></p>
     </div>

@@ -2,33 +2,47 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/proxy/(.*)",
-      "destination": "https://downloads.immortalwrt.org/$1"
+      "source": "/:path*",
+      "destination": "https://downloads.immortalwrt.org/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-allowed-region",
+          "value": "true"
+        }
+      ]
     },
     {
-      "source": "/(.*)",
-      "destination": "/api/proxy"
+      "source": "/:path*",
+      "destination": "/index.html",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-allowed-region",
+          "value": "false"
+        }
+      ]
     }
   ],
   "redirects": [
     {
-      "source": "/blocked",
-      "destination": "/blocked.html",
-      "statusCode": 200
+      "source": "/",
+      "destination": "/api/check-region",
+      "permanent": false
     }
   ],
   "headers": [
     {
-      "source": "/blocked.html",
+      "source": "/index.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" },
         { "key": "Content-Type", "value": "text/html; charset=utf-8" }
       ]
     },
     {
-      "source": "/api/proxy",
+      "source": "/api/check-region",
       "headers": [
-        { "key": "Content-Type", "value": "text/html; charset=utf-8" }
+        { "key": "Content-Type", "value": "application/json" }
       ]
     }
   ],
