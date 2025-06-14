@@ -1,31 +1,36 @@
 {
   "version": 2,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/proxy/(.*)",
-      "dest": "https://downloads.immortalwrt.org/$1",
-      "headers": {
-        "X-Proxy-Service": "ImmortalWrt Mirror"
-      }
+      "source": "/proxy/(.*)",
+      "destination": "https://downloads.immortalwrt.org/$1"
     },
-    {
-      "src": "/blocked",
-      "dest": "/api/blocked.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/proxy.js",
-      "methods": ["GET", "HEAD"]
-    }
-  ],
-  "regions": ["hkg1"],
-  "headers": [
     {
       "source": "/(.*)",
+      "destination": "/api/proxy"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/blocked",
+      "destination": "/blocked.html",
+      "statusCode": 200
+    }
+  ],
+  "headers": [
+    {
+      "source": "/blocked.html",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+        { "key": "Cache-Control", "value": "no-store, max-age=0" },
+        { "key": "Content-Type", "value": "text/html; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/api/proxy",
+      "headers": [
+        { "key": "Content-Type", "value": "text/html; charset=utf-8" }
       ]
     }
-  ]
+  ],
+  "regions": ["hkg1"]
 }

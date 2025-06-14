@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>访问受限</title>
+  <script>
+    // 区域检查逻辑
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        // 获取客户端信息
+        const res = await fetch('/api/proxy?action=info');
+        const data = await res.json();
+        
+        // 显示客户端信息
+        document.getElementById('region-code').textContent = data.country || '未知地区';
+        document.getElementById('client-ip').textContent = data.ip || '未知';
+        document.getElementById('timestamp').textContent = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+        
+        // 检查是否允许访问
+        const allowedRegions = ['CN', 'HK', 'MO', 'TW'];
+        if (allowedRegions.includes(data.country)) {
+          // 允许访问，重定向到实际内容
+          const redirectPath = window.location.pathname.replace('/blocked.html', '');
+          if (redirectPath) {
+            window.location.href = `/proxy${redirectPath}`;
+          } else {
+            window.location.href = '/proxy/';
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('error-message').textContent = '无法获取区域信息，请刷新重试';
+      }
+    });
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      line-height: 1.6;
+      color: #333;
+    }
+    .container {
+      max-width: 650px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .header {
+      background: #e74c3c;
+      padding: 30px;
+      color: white;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .content {
+      padding: 30px;
+    }
+    .info-card {
+      background: #f9f9ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .region-code {
+      display: inline-block;
+      background: #e74c3c22;
+      color: #e74c3c;
+      padding: 5px 15px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-family: monospace;
+      font-size: 1.2rem;
+      margin: 10px 0;
+    }
+    .error {
+      color: #e74c3c;
+      text-align: center;
+      margin: 15px 0;
+      font-weight: 500;
+    }
+    .faq {
+      margin: 20px 0;
+    }
+    .faq h3 {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .faq ul {
+      padding-left: 20px;
+    }
+    .faq li {
+      margin-bottom: 8px;
+    }
+    .footer {
+      padding: 20px;
+      text-align: center;
+      color: #777;
+      border-top: 1px solid #eee;
+    }
+    .footer p {
+      margin: 5px 0;
+    }
+    .refresh-btn {
+      display: block;
+      width: 200px;
+      margin: 20px auto;
+      padding: 10px 15px;
+      background: #3498db;
+      color: white;
+      text-align: center;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>区域访问限制</h1>
+      <p>服务区域访问限制</p>
+    </div>
+    
+    <div class="content">
+      <div class="info-card">
+        <p>我们检测到您正从以下地区访问：</p>
+        <div class="region-code" id="region-code">检测中...</div>
+        <div class="error" id="error-message"></div>
+      </div>
+      
+      <div class="faq">
+        <h3>📌 常见问题</h3>
+        <ul>
+          <li>为什么会出现此页面？ - 您的访问IP不在服务区域范围内</li>
+          <li>支持哪些地区？ - 中国大陆、香港、澳门及台湾</li>
+          <li>如何解除限制？ - 使用支持地区的网络环境访问</li>
+        </ul>
+      </div>
+      
+      <a href="#" class="refresh-btn" onclick="location.reload()">刷新检测结果</a>
+    </div>
+    
+    <div class="footer">
+      <p>如有特殊访问需求，请联系 support@example.com</p>
+      <p>IP: <span id="client-ip">检测中...</span></p>
+      <p>检测时间: <span id="timestamp">--</span></p>
+    </div>
+  </div>
+</body>
+</html>
